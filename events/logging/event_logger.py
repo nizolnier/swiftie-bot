@@ -8,8 +8,7 @@ def format(message: Text) -> Text:
 
     return "\n".join([
         "=====",
-        f"[EVENT LOG @ {current_date_time}]"
-        "\n",
+        f"[EVENT LOG @ {current_date_time}]\n",
         f"Message: {message}",
         "====="
     ])
@@ -19,8 +18,7 @@ def format_with_error(message: Text, error: Exception) -> Text:
 
     return "\n".join([
         "=====",
-        f"[EVENT LOG @ {current_date_time}]"
-        "\n",
+        f"[EVENT LOG @ {current_date_time}]\n",
         f"Message: {message}",
         f"Error: {error}",
         "====="
