@@ -4,6 +4,7 @@ from events.logging.event_logger import log, log_with_error
 from database import get_database_collection
 from pymongo.collection import Collection
 
+
 def check_user_exists_or_create(user_id: Text) -> None:
     user_collection: Collection = get_database_collection("users")
     user = None
@@ -29,6 +30,30 @@ def check_user_exists_or_create(user_id: Text) -> None:
         except Exception as error:
             log_with_error(f"Failed to create user {user_id}", error)
 
+def handle_scoreboard_command() -> Optional[Text]:
+    try:
+        user_collection = get_database_collection("users")
+
+        if user_collection is not None:
+            all_users = user_collection.find()
+
+            # Sorts by points in descending order and by user_id in ascending order
+            # In the case of the same point value for a pair of users
+            all_users_sorted_by_top_points = sorted(
+                all_users,
+                key=lambda user_collection_document: (-1 * user_collection_document["points"], user_collection_document["user_id"]),
+            )
+
+            top_10_users_sorted_by_points = all_users_sorted_by_top_points[:10:]
+            top_10_users_by_points_formatted_scoreboard = "\n".join([
+                f"**{index + 1}.** ***{user_collection_document['user_id']}***: {user_collection_document['points']}" for index, user_collection_document in enumerate(top_10_users_sorted_by_points)
+            ])
+
+            return top_10_users_by_points_formatted_scoreboard
+    except Exception as error:
+        log_with_error(f"There was an issue running the {CommandType.SCOREBOARD} command", error)
+
+    return None
 
 def process_command(message, command: CommandType) -> None:
     author, content = message.author, message.content
@@ -52,7 +77,7 @@ def process_command(message, command: CommandType) -> None:
         else:
             return f"Invalid guess format. Please use the **{CommandType.HELP.value}** command."
     elif command == CommandType.SCOREBOARD:
-        return f"*{message.author}* called {command.name}"
+        return handle_scoreboard_command()
     elif command == CommandType.PRACTICE:
         return f"*{message.author}* called {command.name}"
     elif command == CommandType.PLAY:
