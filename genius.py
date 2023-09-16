@@ -1,9 +1,24 @@
 import requests
 from bs4 import BeautifulSoup
 import re
+import database
 
+def get_clean_song_name(unclean_song_name):
+    taylor_swift_prefix = "Taylor Swift - "
 
-def getSongContent(url, album):
+    unclean_song_name = unclean_song_name[len(taylor_swift_prefix)::]
+    unclean_song_name_with_no_parenthesis = re.sub(r"\(.*\)", "", unclean_song_name)
+    unclean_song_name = unclean_song_name_with_no_parenthesis
+    
+    unclean_song_name_without_lyrics_suffix = re.sub(f"Lyrics.*", "", unclean_song_name)
+    unclean_song_name = unclean_song_name_without_lyrics_suffix
+    
+    unclean_song_name_without_trailing_or_leading_spacing = unclean_song_name.strip()
+    unclean_song_name = unclean_song_name_without_trailing_or_leading_spacing
+    
+    return re.sub('\u200b', '', unclean_song_name)
+
+def process_song(url, album):
     try:
         output = []
         # get the html code from the given url
@@ -11,26 +26,41 @@ def getSongContent(url, album):
         # url = 'https://genius.com/albums/Migos/Culture-ii'
         response = requests.get(url)
         html = response.content
+        
+        souper = BeautifulSoup(html, 'html.parser')
+        title = get_clean_song_name(souper.find('title').contents[0])
+
         # make use of the BeautifulSoup library for scraping through lxml
         soup = BeautifulSoup(html, 'lxml')
-        souper = BeautifulSoup(html, 'html.parser')
-        title = souper.find('title').contents[0]
-        counter = 0
+        lyrics = []
 
         # from inspection of html I know the lyrics are in 'Lyrics__Contaier', so find these div classes and extract the lyrics
         for tag in soup.select('div[class^="Lyrics__Container"], .song_body-lyrics p'):
             t = tag.get_text("\n", strip=True)
-            t = re.sub('\[.*\]', '', t)
-            print(counter)
-            print(t)
-            counter += 1
+            t = "".join(re.split("\(|\)|\[|\]", t)[::2])
+            t = re.sub('\u200b', '', t)
+            t = re.sub('\u205f', ' ', t)
+            lyrics += list(t.split("\n"))
 
-        return html
+        
+
+        songObj = {
+            'title': title,
+            'album': album,
+            'lyrics': [lyric for lyric in lyrics if lyric != ""]
+        }
+
+        taylorSwift = database.get_database_collection("taylorSwift")
+
+        taylorSwift.insert_one(songObj)
+
+        #print(songObj)
+        return songObj
     except Exception as e:
         print(e)
 
 
-def albumGetSongLinks(url):
+def album_get_song_links(url):
     try:
         output = []
         # get the html code from the given url
@@ -41,10 +71,10 @@ def albumGetSongLinks(url):
         # make use of the BeautifulSoup library for scraping through html
         soup = BeautifulSoup(html, features="html.parser")
         souper = BeautifulSoup(html, 'html.parser')
-        album = souper.find('title').contents[0]
+        album = get_clean_song_name(souper.find('title').contents[0])
 
         # this list will hold the links to all songs in the given album
-        songLinks = []
+        song_links = []
         # from inspection of html I know links to songs are in div with class
         # 'chart_row-content', so find these div classes and extract the links in them
         data = soup.findAll('div', attrs={'class': 'chart_row-content'})
@@ -53,19 +83,18 @@ def albumGetSongLinks(url):
             links = div.findAll('a')
             # save the link into a data structure
             for a in links:
-                songLinks.append(a['href'])
+                song_links.append(a['href'])
 
-        for link in songLinks:
-            o = getSongContent(link, album)
+        for link in song_links:
+            o = process_song(link, album)
             output.append(o)
 
-        print(output)
         return output
     except Exception as e:
         print(e)
 
 
-def getAlbums(url):
+def get_albums(url):
     output = []
 
     # standard method of using BeautifulSoup class
@@ -101,7 +130,7 @@ def getAlbums(url):
     # Param - word - the keyword to search for
 
 
-def getSongs(url):
+def get_songs(url):
     output = []
 
     # first find the list of albums for the artist
@@ -117,13 +146,13 @@ def getSongs(url):
         links = div.findAll('a')
         for a in links:
             link = "https://genius.com" + a['href']
-            print(link)
 
         # pass link to helper method to get the list of album links
-    albumLinks = getAlbums(link)
+    albumLinks = get_albums(link)
 
     # then pass each album url
     for link in albumLinks:
-        output.extend(albumGetSongLinks(link))
+        output.extend(album_get_song_links(link))
 
+    print("done")
     return output
