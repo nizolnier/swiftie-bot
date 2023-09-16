@@ -4,12 +4,12 @@ from pymongo import MongoClient
 with open('config.json', 'r', encoding='utf-8') as f:
     config = json.load(f)
 
-url = config['mongourl']
+url = config['MONGO_URL']
 
 def get_database():
 
     cluster = MongoClient(url)
 
-    db = cluster['project1989']
+    db = cluster[config["DATABASE_NAME"]]
 
     return db

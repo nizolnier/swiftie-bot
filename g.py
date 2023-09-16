@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 with open('config.json', 'r', encoding='utf-8') as f:
     config = json.load(f)
 
-client_access_token = config['genius']
+client_access_token = config['GENIUS_ACCESS_TOKEN']
 
 # Format a request URL for the Genius API
 

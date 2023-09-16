@@ -5,7 +5,7 @@ from typing import Optional, Text
 with open('config.json', 'r', encoding='utf-8') as f:
     config = json.load(f)
 
-token = config['token']
+token = config['TOKEN']
 
 async def send_message(message):
     try:
