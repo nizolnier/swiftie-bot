@@ -12,32 +12,32 @@ def process_command(message, command: CommandType) -> None:
         user_song_guess = content[len(CommandType.GUESS_SONG.value)::]
 
         if len(user_song_guess) > 0:
-            return f"{message.author} guessed the song '{user_song_guess}'"
+            return f"*{message.author}* guessed the song '*{user_song_guess}*'"
         else:
-            return f"Invalid guess format. Please use the {CommandType.HELP.value} command."
+            return f"Invalid guess format. Please use the **{CommandType.HELP.value}** command."
 
     elif command == CommandType.GUESS_ALBUM:
         user_album_guess = content[len(CommandType.GUESS_ALBUM.value)::]
 
         if len(user_album_guess) > 0:
-            return f"{message.author} guessed the album '{user_album_guess}'!"
+            return f"*{message.author}* guessed the album '{user_album_guess}'!"
         else:
-            return f"Invalid guess format. Please use the {CommandType.HELP.value} command."
+            return f"Invalid guess format. Please use the **{CommandType.HELP.value}** command."
     elif command == CommandType.SCOREBOARD:
-        return f"{message.author} called {command.name}"
+        return f"*{message.author}* called {command.name}"
     elif command == CommandType.PRACTICE:
-        return f"{message.author} called {command.name}"
+        return f"*{message.author}* called {command.name}"
     elif command == CommandType.PLAY:
-        return f"{message.author} called {command.name}"
+        return f"*{message.author}* called {command.name}"
     elif command == CommandType.HELP:
         return "\n".join([
-            "COMMANDS:",
-            f"{CommandType.HELP.value} --> Gives you the help docs for swiftie bot!",
-            f"{CommandType.SCOREBOARD.value} --> Gives you the scoreboard for the top 10 users by points in this server.",
-            f"{CommandType.PRACTICE.value} --> Start practicing! You WILL NOT get any points for getting the question right.",
-            f"{CommandType.PLAY.value} --> Start playing! You WILL get points for getting the question right!",
-            f"{CommandType.GUESS_ALBUM.value}[album] --> Guess an album. This must be preceded by a {CommandType.PRACTICE.value} or {CommandType.PLAY.value}",
-            f"{CommandType.GUESS_SONG.value}[song] --> Guess a song. This must be preceded by a {CommandType.PRACTICE.value} or {CommandType.PLAY.value}",
+            "__**COMMANDS**__",
+            f"**{CommandType.HELP.value}**    \t\t\t\t\t\t\t\tGives you the help docs for Swiftie Bot!",
+            f"**{CommandType.SCOREBOARD.value}**   \t\t\t\t\tShows the scoreboard for the top 10 users by points in this server.",
+            f"**{CommandType.PRACTICE.value}** \t\t\t\t\t\t\tStart practicing! You will NOT earn points for correct answers.",
+            f"**{CommandType.PLAY.value}** \t\t\t\t\t\t\t\t\tStart playing! You WILL earn points for correct answers!",
+            f"**{CommandType.GUESS_ALBUM.value}[album]**\tGuess an album. This must be preceded by a **{CommandType.PRACTICE.value}** or **{CommandType.PLAY.value}**",
+            f"**{CommandType.GUESS_SONG.value}[song]**  \t\tGuess a song. This must be preceded by a **{CommandType.PRACTICE.value}** or **{CommandType.PLAY.value}**",
             ""
         ])
 
@@ -60,6 +60,6 @@ def handle_message(message) -> Optional[Text]:
             return process_command(message, command)
         else:
             log(f"Command '{message_content}' is not a valid command.")
-            return "wtf is that bro"
+            return "*wtf is that bro*"
     
     return None
