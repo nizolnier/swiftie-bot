@@ -1,4 +1,3 @@
-import discord
 from typing import Text, Optional
 from constants.commandtype import COMMAND_IDENTIFIER, CommandType
 from events.logging.event_logger import log, log_with_error
@@ -40,7 +39,6 @@ def process_command(message, command: CommandType) -> None:
             f"{CommandType.GUESS_SONG.value}[song] --> Guess a song. This must be preceded by a {CommandType.PRACTICE.value} or {CommandType.PLAY.value}",
             ""
         ])
-
 
 
 def get_command_type(message_content: Text) -> CommandType:
