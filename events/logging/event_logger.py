@@ -11,8 +11,7 @@ def format(message: Text) -> Text:
         f"[EVENT LOG @ {current_date_time}]"
         "\n",
         f"Message: {message}",
-        "=====",
-        "\n"
+        "====="
     ])
 
 def format_with_error(message: Text, error: Exception) -> Text:
@@ -24,8 +23,7 @@ def format_with_error(message: Text, error: Exception) -> Text:
         "\n",
         f"Message: {message}",
         f"Error: {error}",
-        "=====",
-        "\n"
+        "====="
     ])
 
 def __get_current_date_time() -> Text:

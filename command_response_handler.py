@@ -4,8 +4,44 @@ from constants.commandtype import COMMAND_IDENTIFIER, CommandType
 from events.logging.event_logger import log, log_with_error
 
 
-def handle_valid_command_response(message, command: CommandType) -> None:
-    log(f"{message.author} called command '{command.name}' with message: '{message.content}'")
+def process_command(message, command: CommandType) -> None:
+    author, content = message.author, message.content
+    log(f"{author} called command '{command.name}' with message: '{content}'")
+
+    if command == CommandType.GUESS_SONG:
+        user_song_guess = content[len(CommandType.GUESS_SONG.value)::]
+
+        if len(user_song_guess) > 0:
+            return f"{message.author} guessed the song '{user_song_guess}'"
+        else:
+            return f"Invalid guess format. Please use the {CommandType.HELP.value} command."
+
+    elif command == CommandType.GUESS_ALBUM:
+        user_album_guess = content[len(CommandType.GUESS_ALBUM.value)::]
+
+        if len(user_album_guess) > 0:
+            return f"{message.author} guessed the album '{user_album_guess}'!"
+        else:
+            return f"Invalid guess format. Please use the {CommandType.HELP.value} command."
+    elif command == CommandType.SCOREBOARD:
+        return f"{message.author} called {command.name}"
+    elif command == CommandType.PRACTICE:
+        return f"{message.author} called {command.name}"
+    elif command == CommandType.PLAY:
+        return f"{message.author} called {command.name}"
+    elif command == CommandType.HELP:
+        return "\n".join([
+            "COMMANDS:",
+            f"{CommandType.HELP.value} --> Gives you the help docs for swiftie bot!",
+            f"{CommandType.SCOREBOARD.value} --> Gives you the scoreboard for the top 10 users by points in this server.",
+            f"{CommandType.PRACTICE.value} --> Start practicing! You WILL NOT get any points for getting the question right.",
+            f"{CommandType.PLAY.value} --> Start playing! You WILL get points for getting the question right!",
+            f"{CommandType.GUESS_ALBUM.value}[album] --> Guess an album. This must be preceded by a {CommandType.PRACTICE.value} or {CommandType.PLAY.value}",
+            f"{CommandType.GUESS_SONG.value}[song] --> Guess a song. This must be preceded by a {CommandType.PRACTICE.value} or {CommandType.PLAY.value}",
+            ""
+        ])
+
+
 
 def get_command_type(message_content: Text) -> CommandType:
     for discord_command_enum_value, discord_command_enum_member  in CommandType._value2member_map_.items():
@@ -21,8 +57,7 @@ def handle_message(message) -> Optional[Text]:
         command: CommandType = get_command_type(message_content)
 
         if command != CommandType.UNKNOWN:
-            handle_valid_command_response(message, command)
-            return f"{message.author} called {command.name}"
+            return process_command(message, command)
         else:
             log(f"Command '{message_content}' is not a valid command.")
             return "wtf is that bro"
