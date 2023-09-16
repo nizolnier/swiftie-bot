@@ -1,17 +1,48 @@
 import requests
 from bs4 import BeautifulSoup
+import re
 
 
-def albumGetSongs(url):
+def getSongContent(url, album):
     try:
         output = []
         # get the html code from the given url
-	    # for this implementation make the url the link to a given album
-	    # url = 'https://genius.com/albums/Migos/Culture-ii'
+        # for this implementation make the url the link to a given album
+        # url = 'https://genius.com/albums/Migos/Culture-ii'
+        response = requests.get(url)
+        html = response.content
+        # make use of the BeautifulSoup library for scraping through lxml
+        soup = BeautifulSoup(html, 'lxml')
+        souper = BeautifulSoup(html, 'html.parser')
+        title = souper.find('title').contents[0]
+        counter = 0
+
+        # from inspection of html I know the lyrics are in 'Lyrics__Contaier', so find these div classes and extract the lyrics
+        for tag in soup.select('div[class^="Lyrics__Container"], .song_body-lyrics p'):
+            t = tag.get_text("\n", strip=True)
+            t = re.sub('\[.*\]', '', t)
+            print(counter)
+            print(t)
+            counter += 1
+
+        return html
+    except Exception as e:
+        print(e)
+
+
+def albumGetSongLinks(url):
+    try:
+        output = []
+        # get the html code from the given url
+        # for this implementation make the url the link to a given album
+        # url = 'https://genius.com/albums/Migos/Culture-ii'
         response = requests.get(url)
         html = response.content
         # make use of the BeautifulSoup library for scraping through html
         soup = BeautifulSoup(html, features="html.parser")
+        souper = BeautifulSoup(html, 'html.parser')
+        album = souper.find('title').contents[0]
+
         # this list will hold the links to all songs in the given album
         songLinks = []
         # from inspection of html I know links to songs are in div with class
@@ -23,11 +54,11 @@ def albumGetSongs(url):
             # save the link into a data structure
             for a in links:
                 songLinks.append(a['href'])
-        
-        # now with all links to songs in the given album use BeautifulSoup to save lyrics
+
         for link in songLinks:
-            output.append(link)
-            
+            o = getSongContent(link, album)
+            output.append(o)
+
         print(output)
         return output
     except Exception as e:
@@ -47,7 +78,7 @@ def getAlbums(url):
 
     eras = ["/albums/Taylor-swift/Speak-now-taylors-version",
             "/albums/Taylor-swift/Red-taylors-version",
-            "/albums/Taylor-swift/1989-deluxe", 
+            "/albums/Taylor-swift/1989-deluxe",
             "/albums/Taylor-swift/Reputation",
             "/albums/Taylor-swift/Folklore-deluxe-version",
             "/albums/Taylor-swift/Fearless-taylor-s-version",
@@ -55,7 +86,7 @@ def getAlbums(url):
             "/albums/Taylor-swift/Midnights-3am-edition",
             "/albums/Taylor-swift/Lover",
             "/albums/Taylor-swift/Evermore-deluxe-version"
-        ]
+            ]
 
     # fromat each href and add it to list of links
     for link in data:
@@ -93,6 +124,6 @@ def getSongs(url):
 
     # then pass each album url
     for link in albumLinks:
-        output.extend(albumGetSongs(link))
+        output.extend(albumGetSongLinks(link))
 
     return output
