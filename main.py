@@ -1,4 +1,5 @@
-import bot
+import bot, genius
 
 if __name__ == '__main__':
-    bot.run_discord_bot()
+    o = genius.getSongs("https://genius.com/artists/Taylor-swift")
+    #bot.run_discord_bot()
