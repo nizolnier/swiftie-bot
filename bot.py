@@ -1,17 +1,20 @@
-import discord, json
+import discord, json, command_response_handler
+from events.logging.event_logger import log, log_with_error
+from typing import Optional, Text
 
 with open('config.json', 'r', encoding='utf-8') as f:
     config = json.load(f)
 
 token = config['token']
 
-async def send_message(message, user_message, is_private):
+async def send_message(message):
     try:
-        response = 'slay'
+        response: Optional[Text] = command_response_handler.handle_message(message)
 
-        await message.channel.send(response)
-    except Exception as e:
-        print(e)
+        if response:
+            await message.channel.send(response)
+    except Exception as error:
+        log_with_error(f"Something went wrong with sending a message", error)
 
 def run_discord_bot():
     intents = discord.Intents.default()
@@ -20,17 +23,11 @@ def run_discord_bot():
 
     @client.event
     async def on_ready():
-        print(f'{client.user} is now running!')
+        log(f"{client.user} is now running")
     
     @client.event
     async def on_message(message):
-        if message.author == client.user:
-            return
-        
-        username = str(message.author)
-        user_message = str(message.content)
-        channel = str(message.channel)
-
-        print(f'{username} said "{user_message}" in channel {channel}')
+        if message.author != client.user:
+            await send_message(message)
 
     client.run(token)
