@@ -2,6 +2,33 @@ from typing import Text, Optional
 from constants.commandtype import COMMAND_IDENTIFIER, CommandType
 from events.logging.event_logger import log, log_with_error
 from database import get_database_collection
+from pymongo.collection import Collection
+
+
+def check_user_exists_or_create(user_id: Text) -> None:
+    user_collection: Collection = get_database_collection("users")
+    user = None
+
+    try:
+        user = user_collection.find_one({
+            "user_id": user_id
+        })
+
+        log(f"User {user_id} found!")
+    except Exception as error:
+        log_with_error(f"Failed to fetch user {user_id}", error)
+    
+    
+    if not user:
+        try:
+            user_collection.insert_one({
+                "user_id": user_id,
+                "points": 0
+            })
+
+            log(f"User {user_id} created!")
+        except Exception as error:
+            log_with_error(f"Failed to create user {user_id}", error)
 
 def handle_scoreboard_command() -> Optional[Text]:
     try:
@@ -31,6 +58,8 @@ def handle_scoreboard_command() -> Optional[Text]:
 def process_command(message, command: CommandType) -> None:
     author, content = message.author, message.content
     log(f"{author} called command '{command.name}' with message: '{content}'")
+
+    check_user_exists_or_create(message.author.name)
 
     if command == CommandType.GUESS_SONG:
         user_song_guess = content[len(CommandType.GUESS_SONG.value)::]
