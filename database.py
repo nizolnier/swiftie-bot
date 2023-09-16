@@ -15,10 +15,15 @@ def get_database() -> Database:
     db = cluster[config["DATABASE_NAME"]]
     return db
 
+class CollectionNotFoundException(Exception):
+    pass
+
 def get_database_collection(collection_name: Text) -> Optional[Collection]:
     collection: Optional[Collection] = None
 
     try:
+        if collection_name not in config["DATABASE_COLLECTIONS"]:
+            raise CollectionNotFoundException()
         database = get_database()
         collection = database[collection_name]
     except Exception as error:
