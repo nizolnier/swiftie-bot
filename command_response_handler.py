@@ -1,3 +1,5 @@
+import random
+from datetime import datetime
 from typing import Text, Optional
 from constants.commandtype import COMMAND_IDENTIFIER, CommandType
 from events.logging.event_logger import log, log_with_error
@@ -29,6 +31,44 @@ def check_user_exists_or_create(user_id: Text) -> None:
             log(f"User {user_id} created!")
         except Exception as error:
             log_with_error(f"Failed to create user {user_id}", error)
+
+
+def handle_practice_command(user_id) -> Optional[Text]:
+    try:
+        
+        taylorSwift : Collection = get_database_collection("taylorSwift")
+        practiceEvents : Collection = get_database_collection("practiceEvents")
+        users : Collection = get_database_collection("users")
+
+        rand = random.randint(0, 207)
+
+        randomSong = taylorSwift.find().limit(-1).skip(rand).next()
+
+        rand = random.randint(0, len(randomSong['lyrics']))
+
+        line = randomSong['lyrics'][rand]
+
+        event_id = random.randint(0, 1000000)
+
+        time = datetime.now().timestamp()
+        event = {
+            'timestamp': int(time),
+            'line': line,
+            'song': randomSong['title'],
+            'album': randomSong['album'],
+            'user_id': user_id,
+            'event_id': event_id
+        }
+
+        users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': event_id } })
+
+        practiceEvents.insert_one(event)
+        
+        return line
+    except Exception as error:
+        log_with_error(f"Failed to practice ", error)
+
+
 
 def handle_scoreboard_command() -> Optional[Text]:
     try:
@@ -79,7 +119,7 @@ def process_command(message, command: CommandType) -> None:
     elif command == CommandType.SCOREBOARD:
         return handle_scoreboard_command()
     elif command == CommandType.PRACTICE:
-        return f"*{message.author}* called {command.name}"
+        return handle_practice_command(message.author.name)
     elif command == CommandType.PLAY:
         return f"*{message.author}* called {command.name}"
     elif command == CommandType.HELP:
