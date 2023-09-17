@@ -33,6 +33,39 @@ def check_user_exists_or_create(user_id: Text) -> None:
             log_with_error(f"Failed to create user {user_id}", error)
 
 
+def handle_guess_song_command(user_id, user_song_guess) -> Optional[Text]:
+    try:
+        users: Collection = get_database_collection("users")
+        practiceEvents : Collection = get_database_collection("practiceEvents")
+
+        user = users.find_one({
+            "user_id": user_id
+        })
+
+        if user['current_event_id'] > 0:
+            event = practiceEvents.find_one({
+            "event_id": user['current_event_id']
+            })
+
+            time = int(datetime.now().timestamp())
+            oneHour = 60 * 60 * 1000
+            if event['timestamp'] - time > oneHour:
+                return 'Sorry time is expired!'
+            else:
+                song = event['song'].lower()
+                if user_song_guess.lower() == song:
+                
+                    users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0 } })
+
+                    return 'You guessed the correct song!'
+                else:
+                    return 'Sorry, not quite!'
+        else:
+            return 'You have no practice round in progress'
+    except Exception as error:
+            log_with_error(f"Failed to guess song {user_id}", error)
+
+
 def handle_practice_command(user_id) -> Optional[Text]:
     try:
         
@@ -48,7 +81,7 @@ def handle_practice_command(user_id) -> Optional[Text]:
 
         line = randomSong['lyrics'][rand]
 
-        event_id = random.randint(0, 1000000)
+        event_id = random.randint(1, 1000000)
 
         time = datetime.now().timestamp()
         event = {
@@ -105,7 +138,7 @@ def process_command(message, command: CommandType) -> None:
         user_song_guess = content[len(CommandType.GUESS_SONG.value)::]
 
         if len(user_song_guess) > 0:
-            return f"*{message.author}* guessed the song '*{user_song_guess}*'"
+            return handle_guess_song_command(message.author.name, user_song_guess)
         else:
             return f"Invalid guess format. Please use the **{CommandType.HELP.value}** command."
 
