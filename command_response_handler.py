@@ -35,6 +35,67 @@ def check_user_exists_or_create(user_id: Text) -> None:
             log_with_error(f"Failed to create user {user_id}", error)
 
 
+def handle_guess_song_album_command(user_id, user_guess) -> Optional[Text]:
+    try:
+        guesses = user_guess.split("-")
+        guess_album = guesses[0].strip()
+        guess_song = guesses[1].strip()
+        users: Collection = get_database_collection("users")
+        events: Collection = get_database_collection("events")
+
+        user = users.find_one({
+            "user_id": user_id
+        })
+
+        if user['current_event_id'] > 0:
+            event = events.find_one({
+            "event_id": user['current_event_id']
+            })
+            
+            time = int(datetime.now().timestamp())
+            half_hour = 30 * 60 * 1000
+            diff_time = event['timestamp'] - time
+            album = event['album'].lower()
+            song = event['song'].lower()
+
+            if event['type'] == EventType.PRACTICE.value:
+                if diff_time > half_hour:
+                    users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0 } })
+                    return f"Sorry time is expired! The song was {song} from {album}"
+                else:
+                    if guess_album.lower() == album and guess_song.lower() == song:
+                        users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0 } })
+
+                        return 'You guessed the correct album!'
+                    else:
+                        return 'Sorry, not quite! Try again!'
+            elif event['type'] == EventType.PLAY.value:            
+                five_min = 5 * 60 * 1000
+    
+                if diff_time < five_min:
+                    if user_album_guess.lower() == album:
+                        points = user['points'] + 8
+                        users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0, 'points': points } })
+
+                        return 'You guessed the correct album and you got 8 points!'
+                    else:
+                        return 'Sorry, not quite! Try again!'                    
+                elif diff_time > five_min and diff_time < half_hour:
+                    if user_album_guess.lower() == album:
+                        points = user['points'] + 3
+                        users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0, 'points': points } })
+
+                        return 'You guessed the correct album and you got 3 points!'
+                    else:
+                        return 'Sorry, not quite! Try again!' 
+                else:
+                    users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0 } })
+                    return f"Sorry time is expired! The album was {event['album']}"
+        else:
+            return 'You have no round in progress'
+    except Exception as error:
+            log_with_error(f"Failed to guess album {user_id}", error)
+
 def handle_guess_album_command(user_id, user_album_guess) -> Optional[Text]:
     try:
         users: Collection = get_database_collection("users")
@@ -227,7 +288,13 @@ def process_command(message, command: CommandType) -> None:
             return handle_guess_song_command(message.author.name, user_song_guess)
         else:
             return f"Invalid guess format, please add a guess body. Please use the **{CommandType.HELP.value}** command."
+    elif command == CommandType.GUESS_SONG_ALBUM:
+        user_guess = content[len(CommandType.GUESS_SONG_ALBUM.value)::]
 
+        if len(user_guess) > 0 and user_guess.find("-") != -1:
+            return handle_guess_album_command(message.author.name, user_guess)
+        else:
+            return f"Invalid guess format, please add a guess body. Please use the **{CommandType.HELP.value}** command."
     elif command == CommandType.GUESS_ALBUM:
         user_album_guess = content[len(CommandType.GUESS_ALBUM.value)::]
 
@@ -262,6 +329,7 @@ def process_command(message, command: CommandType) -> None:
             f"**{CommandType.PRACTICE.value} [difficulty]** \t\t\t\t\t\t\tSame as **{CommandType.PRACTICE.value}** in **easy** you get 3 lyric lines, **medium** you get 2 lyric lines, and **hard** you 1 lyric lines.",
             f"**{CommandType.PLAY.value}** \t\t\t\t\t\t\t\t\tStart playing! You WILL earn points for correct answers!",
             f"**{CommandType.GUESS_ALBUM.value}[album]**\tGuess an album. This must be preceded by a **{CommandType.PRACTICE.value}** or **{CommandType.PLAY.value}**",
+            f"**{CommandType.GUESS_SONG_ALBUM.value}[song - album]**\tGuess a song and an album. This must be preceded by a **{CommandType.PRACTICE.value}** or **{CommandType.PLAY.value}**",
             f"**{CommandType.GUESS_SONG.value}[song]**  \t\tGuess a song. This must be preceded by a **{CommandType.PRACTICE.value}** or **{CommandType.PLAY.value}**"
         ])
 
