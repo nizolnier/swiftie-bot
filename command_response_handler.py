@@ -1,13 +1,13 @@
 import random
 from datetime import datetime
 from typing import Text, Optional
-from constants.commandtype import COMMAND_IDENTIFIER, CommandType
-from constants.eventtype import EventType
-from events.logging.event_logger import log, log_with_error
+from constants import COMMAND_IDENTIFIER, CommandType
+from constants import EventType
+from constants import DifficultyType
+from events.logging import log, log_with_error
+from round_utils import get_lyrics_sequence_by_difficulty
 from database import get_database_collection
 from pymongo.collection import Collection
-from constants.difficultytype import DifficultyType
-from round_utils import get_lyrics_sequence_by_difficulty
 
 def check_user_exists_or_create(user_id: Text) -> None:
     user_collection: Collection = get_database_collection("users")
