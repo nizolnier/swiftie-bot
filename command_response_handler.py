@@ -37,77 +37,127 @@ def check_user_exists_or_create(user_id: Text) -> None:
 def handle_guess_album_command(user_id, user_album_guess) -> Optional[Text]:
     try:
         users: Collection = get_database_collection("users")
-        practiceEvents : Collection = get_database_collection("practiceEvents")
+        events: Collection = get_database_collection("events")
 
         user = users.find_one({
             "user_id": user_id
         })
 
         if user['current_event_id'] > 0:
-            event = practiceEvents.find_one({
+            event = events.find_one({
             "event_id": user['current_event_id']
             })
-
+            
             time = int(datetime.now().timestamp())
-            oneHour = 60 * 60 * 1000
-            if event['timestamp'] - time > oneHour:
-                users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0 } })
-                return f"Sorry time is expired! The song was {event['song']} on album {event['album']}"
-            else:
-                album = event['album'].lower()
-                if user_album_guess.lower() == album:
-                
-                    users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0 } })
+            half_hour = 30 * 60 * 1000
+            diff_time = event['timestamp'] - time
+            album = event['album'].lower()
 
-                    return 'You guessed the correct song!'
+            if event['type'] == 'practice':
+                if diff_time > half_hour:
+                    users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0 } })
+                    return f"Sorry time is expired! The album was {event['album']}"
                 else:
-                    return 'Sorry, not quite!'
+                    if user_album_guess.lower() == album:
+                        users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0 } })
+
+                        return 'You guessed the correct album!'
+                    else:
+                        return 'Sorry, not quite! Try again!'
+            else:            
+                five_min = 5 * 60 * 1000
+    
+                if diff_time < five_min:
+                    if user_album_guess.lower() == album:
+                        points = user['points'] + 8
+                        users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0, 'points': points } })
+
+                        return 'You guessed the correct album and you got 8 points!'
+                    else:
+                        return 'Sorry, not quite! Try again!'                    
+                elif diff_time > five_min and diff_time < half_hour:
+                    if user_album_guess.lower() == album:
+                        points = user['points'] + 3
+                        users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0, 'points': points } })
+
+                        return 'You guessed the correct album and you got 3 points!'
+                    else:
+                        return 'Sorry, not quite! Try again!' 
+                else:
+                    users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0 } })
+                    return f"Sorry time is expired! The album was {event['album']}"
         else:
-            return 'You have no practice round in progress'
+            return 'You have no round in progress'
     except Exception as error:
             log_with_error(f"Failed to guess album {user_id}", error)
+
 
 def handle_guess_song_command(user_id, user_song_guess) -> Optional[Text]:
     try:
         users: Collection = get_database_collection("users")
-        practiceEvents : Collection = get_database_collection("practiceEvents")
+        events: Collection = get_database_collection("events")
 
         user = users.find_one({
             "user_id": user_id
         })
 
         if user['current_event_id'] > 0:
-            event = practiceEvents.find_one({
+            event = events.find_one({
             "event_id": user['current_event_id']
             })
 
             time = int(datetime.now().timestamp())
-            oneHour = 60 * 60 * 1000
-            if event['timestamp'] - time > oneHour:
-                users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0 } })
-                return f"Sorry time is expired! The song was {event['song']}"
-            else:
-                song = event['song'].lower()
-                if user_song_guess.lower() == song:
-                
-                    users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0 } })
+            half_hour = 30 * 60 * 1000
+            diff_time = event['timestamp'] - time
+            song = event['song'].lower()
 
-                    return 'You guessed the correct album!'
+            if event['type'] == 'practice':
+                if diff_time > half_hour:
+                    users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0 } })
+                    return f"Sorry time is expired! The song was {event['song']}"
                 else:
-                    return 'Sorry, not quite!'
+                    song = event['song'].lower()
+                    if user_song_guess.lower() == song:
+                
+                        users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0 } })
+
+                        return 'You guessed the correct song!'
+                    else:
+                        return 'Sorry, not quite! Try again!'
+            else:            
+                five_min = 5 * 60 * 1000
+                if  diff_time < five_min:
+                    if user_song_guess.lower() == song:
+                        points = user['points'] + 5
+                        users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0, 'points': points } })
+
+                        return 'You guessed the correct song and you got 5 points!'
+                    else:
+                        return 'Sorry, not quite! Try again!'                    
+                elif diff_time > five_min and diff_time < half_hour:
+                    if user_song_guess.lower() == song:
+                        points = user['points'] + 3
+                        users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0, 'points': points } })
+
+                        return 'You guessed the correct song and you got 3 points!'
+                    else:
+                        return 'Sorry, not quite! Try again!' 
+                else:
+                    users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0 } })
+                    return f"Sorry time is expired! The song was {event['song']}"
         else:
-            return 'You have no practice round in progress'
+            return 'You have no round in progress'
     except Exception as error:
             log_with_error(f"Failed to guess song {user_id}", error)
 
 
-def handle_practice_command(user_id, difficulty: Optional[DifficultyType]) -> Optional[Text]:
+def handle_practice_play_command(user_id, difficulty: Optional[DifficultyType], type) -> Optional[Text]:
     try:
         taylorSwift : Collection = get_database_collection("taylorSwift")
-        practiceEvents : Collection = get_database_collection("practiceEvents")
+        events : Collection = get_database_collection("events")
         users : Collection = get_database_collection("users")
 
-        NUMBER_OF_SONGS_IN_DATABASE = 207
+        NUMBER_OF_SONGS_IN_DATABASE = 199
         rand = random.randint(0, NUMBER_OF_SONGS_IN_DATABASE - 1)
 
         randomSong = taylorSwift.find().limit(-1).skip(rand).next()
@@ -124,16 +174,17 @@ def handle_practice_command(user_id, difficulty: Optional[DifficultyType]) -> Op
             'song': randomSong['title'],
             'album': randomSong['album'],
             'user_id': user_id,
-            'event_id': event_id
+            'event_id': event_id,
+            'type': type
         }
 
         users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': event_id } })
 
-        practiceEvents.insert_one(event)
+        events.insert_one(event)
         
         return random_lyrics_by_difficulty
     except Exception as error:
-        log_with_error(f"Failed to practice ", error)
+        log_with_error("Failed to practice ", error)
 
 
 
@@ -185,17 +236,23 @@ def process_command(message, command: CommandType) -> None:
             return f"Invalid guess format, please add a guess body. Please use the **{CommandType.HELP.value}** command."
     elif command == CommandType.SCOREBOARD and content == CommandType.SCOREBOARD.value:
         return handle_scoreboard_command()
-    elif command == CommandType.PRACTICE and content == CommandType.PRACTICE.value:
-        return handle_practice_command(message.author.name, None)
-    elif command == CommandType.PRACTICE_EASY and content == CommandType.PRACTICE_EASY.value:
-        return handle_practice_command(message.author.name, DifficultyType.EASY)
-    elif command == CommandType.PRACTICE_MEDIUM and content == CommandType.PRACTICE_MEDIUM.value:
-        return handle_practice_command(message.author.name, DifficultyType.MEDIUM)
-    elif command == CommandType.PRACTICE_HARD and content == CommandType.PRACTICE_HARD.value:
-        return handle_practice_command(message.author.name, DifficultyType.HARD)
-    elif command == CommandType.PLAY and content == CommandType.PLAY.value:
-        return f"*{message.author}* called {command.name}"
-    elif command == CommandType.HELP and content == CommandType.HELP.value:
+    elif command == CommandType.PRACTICE:
+        return handle_practice_play_command(message.author.name, None, type='practice')
+    elif command == CommandType.PRACTICE_EASY:
+        return handle_practice_play_command(message.author.name, DifficultyType.EASY, type='practice')
+    elif command == CommandType.PRACTICE_MEDIUM:
+        return handle_practice_play_command(message.author.name, DifficultyType.MEDIUM, type='practice')
+    elif command == CommandType.PRACTICE_HARD:
+        return handle_practice_play_command(message.author.name, DifficultyType.HARD, type='practice')
+    elif command == CommandType.PLAY:
+        return handle_practice_play_command(message.author.name, None, type='play')
+    elif command == CommandType.PLAY_EASY:
+        return handle_practice_play_command(message.author.name, DifficultyType.EASY, type='play')
+    elif command == CommandType.PLAY_MEDIUM:
+        return handle_practice_play_command(message.author.name, DifficultyType.MEDIUM, type='play')
+    elif command == CommandType.PLAY_HARD:
+        return handle_practice_play_command(message.author.name, DifficultyType.HARD, type='play')
+    elif command == CommandType.HELP:
         return "\n".join([
             "__**COMMANDS**__",
             f"**{CommandType.HELP.value}**    \t\t\t\t\t\t\t\tGives you the help docs for Swiftie Bot!",
