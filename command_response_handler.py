@@ -174,7 +174,7 @@ def process_command(message, command: CommandType) -> None:
         if len(user_song_guess) > 0:
             return handle_guess_song_command(message.author.name, user_song_guess)
         else:
-            return f"Invalid guess format. Please use the **{CommandType.HELP.value}** command."
+            return f"Invalid guess format, please add a guess body. Please use the **{CommandType.HELP.value}** command."
 
     elif command == CommandType.GUESS_ALBUM:
         user_album_guess = content[len(CommandType.GUESS_ALBUM.value)::]
@@ -182,20 +182,20 @@ def process_command(message, command: CommandType) -> None:
         if len(user_album_guess) > 0:
             return handle_guess_album_command(message.author.name, user_album_guess)
         else:
-            return f"Invalid guess format. Please use the **{CommandType.HELP.value}** command."
-    elif command == CommandType.SCOREBOARD:
+            return f"Invalid guess format, please add a guess body. Please use the **{CommandType.HELP.value}** command."
+    elif command == CommandType.SCOREBOARD and content == CommandType.SCOREBOARD.value:
         return handle_scoreboard_command()
-    elif command == CommandType.PRACTICE:
+    elif command == CommandType.PRACTICE and content == CommandType.PRACTICE.value:
         return handle_practice_command(message.author.name, None)
-    elif command == CommandType.PRACTICE_EASY:
+    elif command == CommandType.PRACTICE_EASY and content == CommandType.PRACTICE_EASY.value:
         return handle_practice_command(message.author.name, DifficultyType.EASY)
-    elif command == CommandType.PRACTICE_MEDIUM:
+    elif command == CommandType.PRACTICE_MEDIUM and content == CommandType.PRACTICE_MEDIUM.value:
         return handle_practice_command(message.author.name, DifficultyType.MEDIUM)
-    elif command == CommandType.PRACTICE_HARD:
+    elif command == CommandType.PRACTICE_HARD and content == CommandType.PRACTICE_HARD.value:
         return handle_practice_command(message.author.name, DifficultyType.HARD)
-    elif command == CommandType.PLAY:
+    elif command == CommandType.PLAY and content == CommandType.PLAY.value:
         return f"*{message.author}* called {command.name}"
-    elif command == CommandType.HELP:
+    elif command == CommandType.HELP and content == CommandType.HELP.value:
         return "\n".join([
             "__**COMMANDS**__",
             f"**{CommandType.HELP.value}**    \t\t\t\t\t\t\t\tGives you the help docs for Swiftie Bot!",
@@ -204,8 +204,7 @@ def process_command(message, command: CommandType) -> None:
             f"**{CommandType.PRACTICE.value} [difficulty]** \t\t\t\t\t\t\tSame as **{CommandType.PRACTICE.value}** in **easy** you get 3 lyric lines, **medium** you get 2 lyric lines, and **hard** you 1 lyric lines.",
             f"**{CommandType.PLAY.value}** \t\t\t\t\t\t\t\t\tStart playing! You WILL earn points for correct answers!",
             f"**{CommandType.GUESS_ALBUM.value}[album]**\tGuess an album. This must be preceded by a **{CommandType.PRACTICE.value}** or **{CommandType.PLAY.value}**",
-            f"**{CommandType.GUESS_SONG.value}[song]**  \t\tGuess a song. This must be preceded by a **{CommandType.PRACTICE.value}** or **{CommandType.PLAY.value}**",
-            ""
+            f"**{CommandType.GUESS_SONG.value}[song]**  \t\tGuess a song. This must be preceded by a **{CommandType.PRACTICE.value}** or **{CommandType.PLAY.value}**"
         ])
 
 
