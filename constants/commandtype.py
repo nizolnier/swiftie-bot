@@ -5,6 +5,7 @@ COMMAND_IDENTIFIER = "!"
 class CommandType(Enum):
     GUESS_ALBUM = f"{COMMAND_IDENTIFIER}guess album" + " "
     GUESS_SONG = f"{COMMAND_IDENTIFIER}guess song" + " "
+    GUESS_SONG_ALBUM = f"{COMMAND_IDENTIFIER}guess song-album" + " "
 
 
     PRACTICE = f"{COMMAND_IDENTIFIER}practice"
