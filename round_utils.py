@@ -1,5 +1,5 @@
 from typing import List, Text
-from constants.difficultytype import DifficultyType
+from constants import DifficultyType
 import random
 
 def get_lyrics_sequence_by_difficulty(lyrics: List[Text], difficulty: DifficultyType) -> Text:

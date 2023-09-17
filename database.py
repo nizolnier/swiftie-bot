@@ -3,7 +3,7 @@ from pymongo import MongoClient
 from pymongo.database import Database
 from pymongo.collection import Collection
 from typing import Text, Optional
-from events.logging.event_logger import log, log_with_error
+from events.logging import log, log_with_error
 
 with open('config.json', 'r', encoding='utf-8') as f:
     config = json.load(f)

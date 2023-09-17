@@ -1,5 +1,5 @@
 import discord, json, command_response_handler
-from events.logging.event_logger import log, log_with_error
+from events.logging import log, log_with_error
 from typing import Optional, Text
 
 with open('config.json', 'r', encoding='utf-8') as f:
