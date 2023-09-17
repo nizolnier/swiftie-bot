@@ -74,18 +74,18 @@ def handle_guess_song_album_command(user_id, user_guess) -> Optional[Text]:
     
                 if diff_time < five_min:
                     if guess_album.lower() == album and guess_song.lower() == song:
-                        points = user['points'] + 8
+                        points = user['points'] + 15
                         users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0, 'points': points } })
 
-                        return 'You guessed the correct album and you got 8 points!'
+                        return 'You guessed the correct album and song and you got 15 points!'
                     else:
                         return 'Sorry, not quite! Try again!'                    
                 elif diff_time > five_min and diff_time < half_hour:
                     if guess_album.lower() == album and guess_song.lower() == song:
-                        points = user['points'] + 3
+                        points = user['points'] + 7
                         users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0, 'points': points } })
 
-                        return 'You guessed the correct album and you got 3 points!'
+                        return 'You guessed the correct album and song and you got 7 points!'
                     else:
                         return 'Sorry, not quite! Try again!' 
                 else:
