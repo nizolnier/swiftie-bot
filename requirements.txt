@@ -1,4 +1,4 @@
 discord
-BeautifulSoup
+beautifulsoup4
 requests
 pymongo
