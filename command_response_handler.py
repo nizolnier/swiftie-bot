@@ -2,6 +2,7 @@ import random
 from datetime import datetime
 from typing import Text, Optional
 from constants.commandtype import COMMAND_IDENTIFIER, CommandType
+from constants.eventtype import EventType
 from events.logging.event_logger import log, log_with_error
 from database import get_database_collection
 from pymongo.collection import Collection
@@ -53,7 +54,7 @@ def handle_guess_album_command(user_id, user_album_guess) -> Optional[Text]:
             diff_time = event['timestamp'] - time
             album = event['album'].lower()
 
-            if event['type'] == 'practice':
+            if event['type'] == EventType.PRACTICE.value:
                 if diff_time > half_hour:
                     users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0 } })
                     return f"Sorry time is expired! The album was {event['album']}"
@@ -64,7 +65,7 @@ def handle_guess_album_command(user_id, user_album_guess) -> Optional[Text]:
                         return 'You guessed the correct album!'
                     else:
                         return 'Sorry, not quite! Try again!'
-            else:            
+            elif event['type'] == EventType.PLAY.value:            
                 five_min = 5 * 60 * 1000
     
                 if diff_time < five_min:
@@ -111,7 +112,7 @@ def handle_guess_song_command(user_id, user_song_guess) -> Optional[Text]:
             diff_time = event['timestamp'] - time
             song = event['song'].lower()
 
-            if event['type'] == 'practice':
+            if event['type'] == EventType.PRACTICE.value:
                 if diff_time > half_hour:
                     users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0 } })
                     return f"Sorry time is expired! The song was {event['song']}"
@@ -124,7 +125,7 @@ def handle_guess_song_command(user_id, user_song_guess) -> Optional[Text]:
                         return 'You guessed the correct song!'
                     else:
                         return 'Sorry, not quite! Try again!'
-            else:            
+            elif event['type'] == EventType.PLAY.value:            
                 five_min = 5 * 60 * 1000
                 if  diff_time < five_min:
                     if user_song_guess.lower() == song:
@@ -237,21 +238,21 @@ def process_command(message, command: CommandType) -> None:
     elif command == CommandType.SCOREBOARD and content == CommandType.SCOREBOARD.value:
         return handle_scoreboard_command()
     elif command == CommandType.PRACTICE:
-        return handle_practice_play_command(message.author.name, None, type='practice')
+        return handle_practice_play_command(message.author.name, None, type=EventType.PRACTICE.value)
     elif command == CommandType.PRACTICE_EASY:
-        return handle_practice_play_command(message.author.name, DifficultyType.EASY, type='practice')
+        return handle_practice_play_command(message.author.name, DifficultyType.EASY, type=EventType.PRACTICE.value)
     elif command == CommandType.PRACTICE_MEDIUM:
-        return handle_practice_play_command(message.author.name, DifficultyType.MEDIUM, type='practice')
+        return handle_practice_play_command(message.author.name, DifficultyType.MEDIUM, type=EventType.PRACTICE.value)
     elif command == CommandType.PRACTICE_HARD:
-        return handle_practice_play_command(message.author.name, DifficultyType.HARD, type='practice')
+        return handle_practice_play_command(message.author.name, DifficultyType.HARD, type=EventType.PRACTICE.value)
     elif command == CommandType.PLAY:
-        return handle_practice_play_command(message.author.name, None, type='play')
+        return handle_practice_play_command(message.author.name, None, type=EventType.PLAY.value)
     elif command == CommandType.PLAY_EASY:
-        return handle_practice_play_command(message.author.name, DifficultyType.EASY, type='play')
+        return handle_practice_play_command(message.author.name, DifficultyType.EASY, type=EventType.PLAY.value)
     elif command == CommandType.PLAY_MEDIUM:
-        return handle_practice_play_command(message.author.name, DifficultyType.MEDIUM, type='play')
+        return handle_practice_play_command(message.author.name, DifficultyType.MEDIUM, type=EventType.PLAY.value)
     elif command == CommandType.PLAY_HARD:
-        return handle_practice_play_command(message.author.name, DifficultyType.HARD, type='play')
+        return handle_practice_play_command(message.author.name, DifficultyType.HARD, type=EventType.PLAY.value)
     elif command == CommandType.HELP:
         return "\n".join([
             "__**COMMANDS**__",
