@@ -33,6 +33,39 @@ def check_user_exists_or_create(user_id: Text) -> None:
             log_with_error(f"Failed to create user {user_id}", error)
 
 
+def handle_guess_album_command(user_id, user_album_guess) -> Optional[Text]:
+    try:
+        users: Collection = get_database_collection("users")
+        practiceEvents : Collection = get_database_collection("practiceEvents")
+
+        user = users.find_one({
+            "user_id": user_id
+        })
+
+        if user['current_event_id'] > 0:
+            event = practiceEvents.find_one({
+            "event_id": user['current_event_id']
+            })
+
+            time = int(datetime.now().timestamp())
+            oneHour = 60 * 60 * 1000
+            if event['timestamp'] - time > oneHour:
+                users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0 } })
+                return f"Sorry time is expired! The song was {event['song']} on album {event['album']}"
+            else:
+                album = event['album'].lower()
+                if user_album_guess.lower() == album:
+                
+                    users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0 } })
+
+                    return 'You guessed the correct song!'
+                else:
+                    return 'Sorry, not quite!'
+        else:
+            return 'You have no practice round in progress'
+    except Exception as error:
+            log_with_error(f"Failed to guess album {user_id}", error)
+
 def handle_guess_song_command(user_id, user_song_guess) -> Optional[Text]:
     try:
         users: Collection = get_database_collection("users")
@@ -58,7 +91,7 @@ def handle_guess_song_command(user_id, user_song_guess) -> Optional[Text]:
                 
                     users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0 } })
 
-                    return 'You guessed the correct song!'
+                    return 'You guessed the correct album!'
                 else:
                     return 'Sorry, not quite!'
         else:
@@ -69,7 +102,6 @@ def handle_guess_song_command(user_id, user_song_guess) -> Optional[Text]:
 
 def handle_practice_command(user_id) -> Optional[Text]:
     try:
-        
         taylorSwift : Collection = get_database_collection("taylorSwift")
         practiceEvents : Collection = get_database_collection("practiceEvents")
         users : Collection = get_database_collection("users")
@@ -147,7 +179,7 @@ def process_command(message, command: CommandType) -> None:
         user_album_guess = content[len(CommandType.GUESS_ALBUM.value)::]
 
         if len(user_album_guess) > 0:
-            return f"*{message.author}* guessed the album '{user_album_guess}'!"
+            return handle_guess_album_command(message.author.name, user_album_guess)
         else:
             return f"Invalid guess format. Please use the **{CommandType.HELP.value}** command."
     elif command == CommandType.SCOREBOARD:
