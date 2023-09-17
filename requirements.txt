@@ -2,6 +2,3 @@ discord
 beautifulsoup4
 requests
 pymongo
-bot
-genius
-command_response_handling
