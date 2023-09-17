@@ -50,7 +50,8 @@ def handle_guess_song_command(user_id, user_song_guess) -> Optional[Text]:
             time = int(datetime.now().timestamp())
             oneHour = 60 * 60 * 1000
             if event['timestamp'] - time > oneHour:
-                return 'Sorry time is expired!'
+                users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0 } })
+                return f"Sorry time is expired! The song was {event['song']}"
             else:
                 song = event['song'].lower()
                 if user_song_guess.lower() == song:
