@@ -5,7 +5,8 @@ from constants.commandtype import COMMAND_IDENTIFIER, CommandType
 from events.logging.event_logger import log, log_with_error
 from database import get_database_collection
 from pymongo.collection import Collection
-
+from constants.difficultytype import DifficultyType
+from round_utils import get_lyrics_sequence_by_difficulty
 
 def check_user_exists_or_create(user_id: Text) -> None:
     user_collection: Collection = get_database_collection("users")
@@ -67,27 +68,27 @@ def handle_guess_song_command(user_id, user_song_guess) -> Optional[Text]:
             log_with_error(f"Failed to guess song {user_id}", error)
 
 
-def handle_practice_command(user_id) -> Optional[Text]:
+def handle_practice_command(user_id, difficulty: Optional[DifficultyType]) -> Optional[Text]:
     try:
         
         taylorSwift : Collection = get_database_collection("taylorSwift")
         practiceEvents : Collection = get_database_collection("practiceEvents")
         users : Collection = get_database_collection("users")
 
-        rand = random.randint(0, 207)
+        NUMBER_OF_SONGS_IN_DATABASE = 207
+        rand = random.randint(0, NUMBER_OF_SONGS_IN_DATABASE - 1)
 
         randomSong = taylorSwift.find().limit(-1).skip(rand).next()
 
-        rand = random.randint(0, len(randomSong['lyrics']))
-
-        line = randomSong['lyrics'][rand]
+        effective_difficulty = DifficultyType.EASY if difficulty is None else difficulty
+        random_lyrics_by_difficulty = get_lyrics_sequence_by_difficulty(randomSong["lyrics"], effective_difficulty)
 
         event_id = random.randint(1, 1000000)
 
         time = datetime.now().timestamp()
         event = {
             'timestamp': int(time),
-            'line': line,
+            'line': random_lyrics_by_difficulty,
             'song': randomSong['title'],
             'album': randomSong['album'],
             'user_id': user_id,
@@ -98,7 +99,7 @@ def handle_practice_command(user_id) -> Optional[Text]:
 
         practiceEvents.insert_one(event)
         
-        return line
+        return random_lyrics_by_difficulty
     except Exception as error:
         log_with_error(f"Failed to practice ", error)
 
@@ -153,7 +154,13 @@ def process_command(message, command: CommandType) -> None:
     elif command == CommandType.SCOREBOARD:
         return handle_scoreboard_command()
     elif command == CommandType.PRACTICE:
-        return handle_practice_command(message.author.name)
+        return handle_practice_command(message.author.name, None)
+    elif command == CommandType.PRACTICE_EASY:
+        return handle_practice_command(message.author.name, DifficultyType.EASY)
+    elif command == CommandType.PRACTICE_MEDIUM:
+        return handle_practice_command(message.author.name, DifficultyType.MEDIUM)
+    elif command == CommandType.PRACTICE_HARD:
+        return handle_practice_command(message.author.name, DifficultyType.HARD)
     elif command == CommandType.PLAY:
         return f"*{message.author}* called {command.name}"
     elif command == CommandType.HELP:
@@ -162,7 +169,7 @@ def process_command(message, command: CommandType) -> None:
             f"**{CommandType.HELP.value}**    \t\t\t\t\t\t\t\tGives you the help docs for Swiftie Bot!",
             f"**{CommandType.SCOREBOARD.value}**   \t\t\t\t\tShows the scoreboard for the top 10 users by points in this server.",
             f"**{CommandType.PRACTICE.value}** \t\t\t\t\t\t\tStart practicing any difficulty! You will NOT earn points for correct answers.",
-            f"**{CommandType.PRACTICE.value}[difficulty]** \t\t\t\t\t\t\tSame as **{CommandType.PRACTICE.value}** in **easy** you get 3 lyric lines, **medium** you get 2 lyric lines, and **hard** you 1 lyric lines.",
+            f"**{CommandType.PRACTICE.value} [difficulty]** \t\t\t\t\t\t\tSame as **{CommandType.PRACTICE.value}** in **easy** you get 3 lyric lines, **medium** you get 2 lyric lines, and **hard** you 1 lyric lines.",
             f"**{CommandType.PLAY.value}** \t\t\t\t\t\t\t\t\tStart playing! You WILL earn points for correct answers!",
             f"**{CommandType.GUESS_ALBUM.value}[album]**\tGuess an album. This must be preceded by a **{CommandType.PRACTICE.value}** or **{CommandType.PLAY.value}**",
             f"**{CommandType.GUESS_SONG.value}[song]**  \t\tGuess a song. This must be preceded by a **{CommandType.PRACTICE.value}** or **{CommandType.PLAY.value}**",
