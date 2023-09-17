@@ -8,6 +8,11 @@ class CommandType(Enum):
 
 
     PRACTICE = f"{COMMAND_IDENTIFIER}practice"
+    PRACTICE_EASY = f"{COMMAND_IDENTIFIER}practice easy"
+    PRACTICE_MEDIUM = f"{COMMAND_IDENTIFIER}practice medium"
+    PRACTICE_HARD = f"{COMMAND_IDENTIFIER}practice hard"
+
+
     PLAY = f"{COMMAND_IDENTIFIER}play"
     SCOREBOARD = f"{COMMAND_IDENTIFIER}scoreboard"
     HELP = f"{COMMAND_IDENTIFIER}help"

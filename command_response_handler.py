@@ -161,7 +161,8 @@ def process_command(message, command: CommandType) -> None:
             "__**COMMANDS**__",
             f"**{CommandType.HELP.value}**    \t\t\t\t\t\t\t\tGives you the help docs for Swiftie Bot!",
             f"**{CommandType.SCOREBOARD.value}**   \t\t\t\t\tShows the scoreboard for the top 10 users by points in this server.",
-            f"**{CommandType.PRACTICE.value}** \t\t\t\t\t\t\tStart practicing! You will NOT earn points for correct answers.",
+            f"**{CommandType.PRACTICE.value}** \t\t\t\t\t\t\tStart practicing any difficulty! You will NOT earn points for correct answers.",
+            f"**{CommandType.PRACTICE.value}[difficulty]** \t\t\t\t\t\t\tSame as **{CommandType.PRACTICE.value}** in **easy** you get 3 lyric lines, **medium** you get 2 lyric lines, and **hard** you 1 lyric lines.",
             f"**{CommandType.PLAY.value}** \t\t\t\t\t\t\t\t\tStart playing! You WILL earn points for correct answers!",
             f"**{CommandType.GUESS_ALBUM.value}[album]**\tGuess an album. This must be preceded by a **{CommandType.PRACTICE.value}** or **{CommandType.PLAY.value}**",
             f"**{CommandType.GUESS_SONG.value}[song]**  \t\tGuess a song. This must be preceded by a **{CommandType.PRACTICE.value}** or **{CommandType.PLAY.value}**",
@@ -170,7 +171,10 @@ def process_command(message, command: CommandType) -> None:
 
 
 def get_command_type(message_content: Text) -> CommandType:
-    for discord_command_enum_value, discord_command_enum_member  in CommandType._value2member_map_.items():
+    # In descending order of the command length, try those first
+    # Why? Like for the !practice hard vs !practice cases,
+    # If !practice comes first it could false hit for !practice [difficulty]
+    for discord_command_enum_value, discord_command_enum_member in sorted(CommandType._value2member_map_.items(), key=lambda key_value_tuple: -1 * len(key_value_tuple[0])):
         if message_content.startswith(discord_command_enum_value):
             return discord_command_enum_member
 
