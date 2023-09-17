@@ -37,9 +37,9 @@ def check_user_exists_or_create(user_id: Text) -> None:
 
 def handle_guess_song_album_command(user_id, user_guess) -> Optional[Text]:
     try:
-        guesses = user_guess.split("-")
-        guess_album = guesses[0].strip()
-        guess_song = guesses[1].strip()
+        guesses = user_guess.split(" - ")
+        guess_song = guesses[0].strip()
+        guess_album = guesses[1].strip()
         users: Collection = get_database_collection("users")
         events: Collection = get_database_collection("events")
 
@@ -66,7 +66,7 @@ def handle_guess_song_album_command(user_id, user_guess) -> Optional[Text]:
                     if guess_album.lower() == album and guess_song.lower() == song:
                         users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0 } })
 
-                        return 'You guessed the correct album!'
+                        return 'You guessed the correct album and song!'
                     else:
                         return 'Sorry, not quite! Try again!'
             elif event['type'] == EventType.PLAY.value:            
@@ -90,7 +90,7 @@ def handle_guess_song_album_command(user_id, user_guess) -> Optional[Text]:
                         return 'Sorry, not quite! Try again!' 
                 else:
                     users.update_one({ "user_id": user_id }, { "$set": { 'current_event_id': 0 } })
-                    return f"Sorry time is expired! The album was {event['album']}"
+                    return f"Sorry time is expired! The song was {song} from {album}"
         else:
             return 'You have no round in progress'
     except Exception as error:
@@ -292,7 +292,7 @@ def process_command(message, command: CommandType) -> None:
         user_guess = content[len(CommandType.GUESS_SONG_ALBUM.value)::]
 
         if len(user_guess) > 0 and user_guess.find("-") != -1:
-            return handle_guess_album_command(message.author.name, user_guess)
+            return handle_guess_song_album_command(message.author.name, user_guess)
         else:
             return f"Invalid guess format, please add a guess body. Please use the **{CommandType.HELP.value}** command."
     elif command == CommandType.GUESS_ALBUM:
