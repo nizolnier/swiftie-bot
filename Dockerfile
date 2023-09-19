@@ -3,5 +3,8 @@ WORKDIR /
 COPY requirements.txt .
 RUN pip3 install -r requirements.txt
 COPY . .
-RUN echo "$CONFIG" >> ./config.json
+ARG CONFIG
+ENV CONFIG=$CONFIG
+RUN echo $CONFIG >> ./config.json
+RUN cat config.json
 CMD python3 main.py
